@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDS Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .user-details {
+            text-align: right;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .user-role {
+            color: #84cbb7;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        
+        .welcome-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .welcome-message h2 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        
+        .welcome-message p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .admin-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>MIDS</h2>
+        <nav>
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="images.html">Images</a>
+            <a href="patients.html">Patients</a>
+            <a href="doctors.html">Doctors</a>
+            <a href="admin.html" id="adminLink" style="display: none;">Admin Panel</a>
+        </nav>
+    </div>
+    <div class="main-content">
+        <header>
+            <h1>Dashboard</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="user-details">
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-role" id="userRole"></div>
+                </div>
+                <div class="user-avatar" id="userAvatar"></div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+        
+        <div class="welcome-message" id="welcomeMessage" style="display: none;">
+            <h2>Welcome back, <span id="welcomeName"></span>!</h2>
+            <p>Here's an overview of your medical image system.</p>
+        </div>
+        
+        <div class="card-container" id="stats-container">
+            <div class="card">
+                <h3>Total Images</h3>
+                <p id="image-count">Loading...</p>
+            </div>
+            <div class="card">
+                <h3>Total Patients</h3>
+                <p id="patient-count">Loading...</p>
+            </div>
+            <div class="card">
+                <h3>Total Doctors</h3>
+                <p id="doctor-count">Loading...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadStats();
+        });
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('backend/auth.php?action=check');
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    displayUserInfo(data.user);
+                } else {
+                    // Redirect to login if not authenticated
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function displayUserInfo(user) {
+            // Display user info in header
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userRole').textContent = user.role;
+            document.getElementById('userAvatar').textContent = user.name.charAt(0);
+            document.getElementById('userInfo').style.display = 'flex';
+            
+            // Show admin panel link for admin users
+            if (user.role === 'Admin') {
+                document.getElementById('userRole').innerHTML = user.role + '<span class="admin-badge">Admin</span>';
+                document.getElementById('adminLink').style.display = 'block';
+            }
+            
+            // Display welcome message
+            document.getElementById('welcomeName').textContent = user.name;
+            document.getElementById('welcomeMessage').style.display = 'block';
+        }
+        
+        async function logout() {
+            try {
+                await fetch('backend/auth.php?action=logout');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+        
+        function loadStats() {
+            fetch('backend/stats.php')
+                .then(response => response.json())
+                .then(stats => {
+                    document.getElementById('image-count').textContent = stats.image_count;
+                    document.getElementById('patient-count').textContent = stats.patient_count;
+                    document.getElementById('doctor-count').textContent = stats.doctor_count;
+                })
+                .catch(error => console.error('Error fetching stats:', error));
+        }
+    </script>
+</body>
+</html> 

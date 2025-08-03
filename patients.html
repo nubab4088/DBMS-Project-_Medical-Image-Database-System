@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDS Patients</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .user-details {
+            text-align: right;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .user-role {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        
+        .admin-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-completed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>MIDS</h2>
+        <nav>
+            <a href="index.html">Dashboard</a>
+            <a href="images.html">Images</a>
+            <a href="patients.html" class="active">Patients</a>
+            <a href="doctors.html">Doctors</a>
+            <a href="admin.html" id="adminLink" style="display: none;">Admin Panel</a>
+        </nav>
+    </div>
+    <div class="main-content">
+        <header>
+            <h1>Patient Records</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="user-details">
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-role" id="userRole"></div>
+                </div>
+                <div class="user-avatar" id="userAvatar"></div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+        <div class="card-container" id="patient-container">
+            <p id="loading">Loading patients...</p>
+        </div>
+    </div>
+    
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadPatients();
+        });
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('backend/auth.php?action=check');
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    displayUserInfo(data.user);
+                } else {
+                    // Redirect to login if not authenticated
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function displayUserInfo(user) {
+            // Display user info in header
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userRole').textContent = user.role;
+            document.getElementById('userAvatar').textContent = user.name.charAt(0);
+            document.getElementById('userInfo').style.display = 'flex';
+            
+            // Show admin panel link for admin users
+            if (user.role === 'Admin') {
+                document.getElementById('userRole').innerHTML = user.role + '<span class="admin-badge">Admin</span>';
+                document.getElementById('adminLink').style.display = 'block';
+            }
+        }
+        
+        async function logout() {
+            try {
+                await fetch('backend/auth.php?action=logout');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+        
+        function loadPatients() {
+            fetch('backend/patients.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(patients => {
+                    const container = document.getElementById('patient-container');
+                    const loadingIndicator = document.getElementById('loading');
+                    
+                    if (loadingIndicator) {
+                        loadingIndicator.remove();
+                    }
+
+                    if (patients.length === 0) {
+                        container.innerHTML = '<p>No patients found in the database.</p>';
+                        return;
+                    }
+
+                    patients.forEach(patient => {
+                        const card = document.createElement('div');
+                        card.classList.add('card');
+                        
+                        const firstVisit = patient.first_visit ? new Date(patient.first_visit).toLocaleDateString() : 'N/A';
+                        const lastVisit = patient.last_visit ? new Date(patient.last_visit).toLocaleDateString() : 'N/A';
+                        const statusClass = patient.status === 'Active' ? 'status-active' : 'status-completed';
+                        
+                        card.innerHTML = `
+                            <h3>Patient ID: ${patient.patient_id}</h3>
+                            <p><strong>Name:</strong> ${patient.name || 'N/A'}</p>
+                            <p><strong>Age:</strong> ${patient.age || 'N/A'}</p>
+                            <p><strong>Gender:</strong> ${patient.gender || 'N/A'}</p>
+                            <p><strong>Contact:</strong> ${patient.contact_info || 'N/A'}</p>
+                            <p><strong>Doctor:</strong> ${patient.doctor_name || 'N/A'}</p>
+                            <p><strong>Department:</strong> ${patient.department_name || 'N/A'}</p>
+                            <p><strong>Subcategory:</strong> ${patient.subcategory_name || 'N/A'}</p>
+                            <p><strong>Total Images:</strong> ${patient.image_count || 0}</p>
+                            <p><strong>First Visit:</strong> ${firstVisit}</p>
+                            <p><strong>Last Visit:</strong> ${lastVisit}</p>
+                            <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${patient.status || 'N/A'}</span></p>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching patients:', error);
+                    const container = document.getElementById('patient-container');
+                    container.innerHTML = `<p id="error">Error loading patients.</p>`;
+                });
+        }
+    </script>
+</body>
+</html>

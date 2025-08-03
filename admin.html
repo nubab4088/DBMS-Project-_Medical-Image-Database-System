@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Medical Image Database</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .tab-container {
+            margin-bottom: 30px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-button {
+            padding: 12px 24px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .data-table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .efficiency-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .department-selector {
+            margin-bottom: 20px;
+        }
+        .department-selector select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .performance-badges {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .badge.top { background: #d4edda; color: #155724; }
+        .badge.efficient { background: #d1ecf1; color: #0c5460; }
+        .badge.active { background: #fff3cd; color: #856404; }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .activity-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        .activity-info {
+            flex: 1;
+        }
+        .activity-stats {
+            text-align: right;
+            color: #666;
+        }
+        .system-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .ranking-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+        .rank-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+        .rank-info {
+            flex: 1;
+        }
+        .rank-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .rank-details {
+            font-size: 12px;
+            color: #666;
+        }
+        .rank-value {
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin Dashboard</h1>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="showTab('overview')">Overview</button>
+                <button class="tab-button" onclick="showTab('patients')">Patient Records</button>
+                <button class="tab-button" onclick="showTab('doctors')">Doctor Performance</button>
+                <button class="tab-button" onclick="showTab('treatment')">Treatment Analytics</button>
+                <button class="tab-button" onclick="showTab('departments')">Department Analytics</button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-patients">-</div>
+                        <div class="stat-label">Total Patients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-doctors">-</div>
+                        <div class="stat-label">Total Doctors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-images">-</div>
+                        <div class="stat-label">Total Images</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-departments">-</div>
+                        <div class="stat-label">Departments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="active-patients">-</div>
+                        <div class="stat-label">Active Patients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avg-treatment-days">-</div>
+                        <div class="stat-label">Avg Treatment Days</div>
+                    </div>
+                </div>
+                
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">Monthly Activity Trends</div>
+                        <canvas id="overviewMonthlyChart" height="120"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">Department Distribution</div>
+                        <canvas id="overviewDeptChart" height="120"></canvas>
+                    </div>
+                </div>
+                
+                <div class="overview-grid">
+                    <div class="ranking-card">
+                        <div class="chart-title">Top Performing Doctors</div>
+                        <div id="top-doctors-overview"></div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">System Health</div>
+                        <div id="system-health"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Recent Activity</div>
+                    <div id="recent-activity"></div>
+                </div>
+            </div>
+            
+            <!-- Patient Records Tab -->
+            <div id="patients" class="tab-content">
+                <div class="chart-container">
+                    <div class="chart-title">Patient Records</div>
+                    <div id="patient-records"></div>
+                </div>
+            </div>
+            
+            <!-- Doctor Performance Tab -->
+            <div id="doctors" class="tab-content">
+                <div class="chart-container">
+                    <div class="chart-title">Doctor Performance Overview</div>
+                    <div id="doctor-performance"></div>
+                </div>
+                
+                <div class="chart-grid">
+                    <div class="ranking-card">
+                        <div class="chart-title">Top Performing Doctors</div>
+                        <div id="top-doctors"></div>
+                    </div>
+                    
+                    <div class="ranking-card">
+                        <div class="chart-title">Most Efficient Doctors</div>
+                        <div id="efficient-doctors"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Treatment Analytics Tab -->
+            <div id="treatment" class="tab-content">
+                <div class="efficiency-metrics" id="efficiency-metrics"></div>
+                
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">Monthly Treatment Trends</div>
+                        <canvas id="monthlyTrendsChart" height="120"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">Gender Demographics</div>
+                        <canvas id="genderPieChart" height="120"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Treatment Status Breakdown</div>
+                    <div id="status-breakdown"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Department Performance</div>
+                    <canvas id="deptPerfChart" height="120"></canvas>
+                </div>
+            </div>
+            
+            <!-- Department Analytics Tab -->
+            <div id="departments" class="tab-content">
+                <div class="department-selector">
+                    <label for="department-select">Select Department:</label>
+                    <select id="department-select" onchange="loadDepartmentDetails()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Department Overview</div>
+                    <canvas id="deptOverviewChart" height="120"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Department Details</div>
+                    <div id="department-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart variables
+        let overviewMonthlyChart, overviewDeptChart, monthlyTrendsChart, genderPieChart, deptPerfChart, deptOverviewChart;
+        
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load data for the tab
+            switch(tabName) {
+                case 'overview':
+                    loadOverview();
+                    break;
+                case 'patients':
+                    loadPatientRecords();
+                    break;
+                case 'doctors':
+                    loadDoctorPerformance();
+                    break;
+                case 'treatment':
+                    loadTreatmentAnalytics();
+                    break;
+                case 'departments':
+                    loadDepartmentAnalytics();
+                    break;
+            }
+        }
+        
+        // Load overview data
+        async function loadOverview() {
+            try {
+                const response = await fetch('backend/admin.php?action=overview');
+                const data = await response.json();
+                
+                document.getElementById('total-patients').textContent = data.total_patients;
+                document.getElementById('total-doctors').textContent = data.total_doctors;
+                document.getElementById('total-images').textContent = data.total_images;
+                document.getElementById('total-departments').textContent = data.total_departments;
+                document.getElementById('active-patients').textContent = data.active_patients;
+                document.getElementById('avg-treatment-days').textContent = data.avg_treatment_days || 'N/A';
+                
+                // Load treatment analytics for charts
+                const treatmentResponse = await fetch('backend/admin.php?action=treatment_analytics');
+                const treatmentData = await treatmentResponse.json();
+                
+                // Monthly Activity Trends Chart
+                const months = treatmentData.monthly_trends.map(trend => trend.month).reverse();
+                const imagesUploaded = treatmentData.monthly_trends.map(trend => trend.images_uploaded).reverse();
+                const patientsTreated = treatmentData.monthly_trends.map(trend => trend.patients_treated).reverse();
+                
+                if (overviewMonthlyChart) overviewMonthlyChart.destroy();
+                const ctx1 = document.getElementById('overviewMonthlyChart').getContext('2d');
+                overviewMonthlyChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'Images Uploaded',
+                                data: imagesUploaded,
+                                borderColor: 'rgba(0, 123, 255, 1)',
+                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Patients Treated',
+                                data: patientsTreated,
+                                borderColor: 'rgba(40, 167, 69, 1)',
+                                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+                
+                // Department Distribution Chart
+                const deptNames = treatmentData.department_performance.map(d => d.department_name);
+                const deptPatients = treatmentData.department_performance.map(d => d.patients_treated);
+                
+                if (overviewDeptChart) overviewDeptChart.destroy();
+                const ctx2 = document.getElementById('overviewDeptChart').getContext('2d');
+                overviewDeptChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: deptNames,
+                        datasets: [{
+                            data: deptPatients,
+                            backgroundColor: [
+                                'rgba(0, 123, 255, 0.7)',
+                                'rgba(40, 167, 69, 0.7)',
+                                'rgba(255, 193, 7, 0.7)',
+                                'rgba(220, 53, 69, 0.7)',
+                                'rgba(108, 117, 125, 0.7)',
+                                'rgba(23, 162, 184, 0.7)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+                
+                // Top Performing Doctors with ranking
+                const topDoctorsHtml = data.recent_activity.slice(0, 5).map((doctor, index) => `
+                    <div class="ranking-item">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="rank-info">
+                            <div class="rank-name">${doctor.doctor_name}</div>
+                            <div class="rank-details">${doctor.department_name}</div>
+                        </div>
+                        <div class="rank-value">${doctor.patient_count} patients</div>
+                    </div>
+                `).join('');
+                document.getElementById('top-doctors-overview').innerHTML = topDoctorsHtml;
+                
+                // System Health
+                const systemHealthHtml = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="metric-item">
+                            <div class="metric-value">${Math.round(data.total_patients / data.total_doctors)}</div>
+                            <div class="metric-label">Patients per Doctor</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${Math.round(data.total_images / data.total_patients)}</div>
+                            <div class="metric-label">Images per Patient</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${data.active_patients}</div>
+                            <div class="metric-label">Active Cases</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">${data.total_patients - data.active_patients}</div>
+                            <div class="metric-label">Completed Cases</div>
+                        </div>
+                    </div>
+                    <div class="system-status">
+                        <strong>System Status:</strong> ✓ Operational
+                        <br>
+                        <small>Last updated: ${new Date().toLocaleString()}</small>
+                    </div>
+                `;
+                document.getElementById('system-health').innerHTML = systemHealthHtml;
+                
+                // Recent activity
+                const activityHtml = data.recent_activity.map(item => `
+                    <div class="activity-item">
+                        <div class="activity-info">
+                            <strong>${item.doctor_name}</strong> treated <strong>${item.patient_count}</strong> patients in ${item.department_name}
+                        </div>
+                        <div class="activity-stats">
+                            <small>${item.last_activity}</small>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('recent-activity').innerHTML = activityHtml;
+            } catch (error) {
+                console.error('Error loading overview:', error);
+            }
+        }
+        
+        // Load patient records
+        async function loadPatientRecords() {
+            try {
+                const response = await fetch('backend/admin.php?action=patient_records');
+                const data = await response.json();
+                
+                const recordsHtml = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Doctor</th>
+                                <th>Department</th>
+                                <th>Images</th>
+                                <th>Last Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(patient => `
+                                <tr>
+                                    <td>${patient.patient_id}</td>
+                                    <td>${patient.name}</td>
+                                    <td>${patient.age || 'N/A'}</td>
+                                    <td>${patient.gender || 'N/A'}</td>
+                                    <td>${patient.doctor_name || 'N/A'}</td>
+                                    <td>${patient.department_name || 'N/A'}</td>
+                                    <td>${patient.image_count}</td>
+                                    <td>${patient.last_activity || 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById('patient-records').innerHTML = recordsHtml;
+            } catch (error) {
+                console.error('Error loading patient records:', error);
+            }
+        }
+        
+        // Load doctor performance
+        async function loadDoctorPerformance() {
+            try {
+                const response = await fetch('backend/admin.php?action=doctor_performance');
+                const data = await response.json();
+                
+                // Main performance table
+                const performanceHtml = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Department</th>
+                                <th>Patients Treated</th>
+                                <th>Total Images</th>
+                                <th>Avg Patient Age</th>
+                                <th>Images/Patient</th>
+                                <th>Avg Treatment Days</th>
+                                <th>Patients/Day</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.doctors.map(doctor => `
+                                <tr>
+                                    <td>${doctor.doctor_name}</td>
+                                    <td>${doctor.department_name || 'N/A'}</td>
+                                    <td>${doctor.patients_treated}</td>
+                                    <td>${doctor.total_images}</td>
+                                    <td>${doctor.avg_patient_age || 'N/A'}</td>
+                                    <td>${doctor.images_per_patient || 'N/A'}</td>
+                                    <td>${doctor.avg_treatment_days || 'N/A'}</td>
+                                    <td>${doctor.patients_per_day || 'N/A'}</td>
+                                    <td>
+                                        <div class="performance-badges">
+                                            ${doctor.patients_treated > 200 ? '<span class="badge top">Top</span>' : ''}
+                                            ${doctor.avg_treatment_days && doctor.avg_treatment_days < 5 ? '<span class="badge efficient">Efficient</span>' : ''}
+                                            ${doctor.active_patients > 0 ? '<span class="badge active">Active</span>' : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById('doctor-performance').innerHTML = performanceHtml;
+                
+                // Top doctors with ranking
+                const topDoctorsHtml = data.performance_metrics.top_by_patients.map((doctor, index) => `
+                    <div class="ranking-item">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="rank-info">
+                            <div class="rank-name">${doctor.doctor_name}</div>
+                            <div class="rank-details">Top Performer</div>
+                        </div>
+                        <div class="rank-value">${doctor.patients_treated} patients</div>
+                    </div>
+                `).join('');
+                document.getElementById('top-doctors').innerHTML = topDoctorsHtml;
+                
+                // Most efficient doctors with ranking
+                const efficientDoctorsHtml = data.performance_metrics.most_efficient.map((doctor, index) => `
+                    <div class="ranking-item">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="rank-info">
+                            <div class="rank-name">${doctor.doctor_name}</div>
+                            <div class="rank-details">Most Efficient</div>
+                        </div>
+                        <div class="rank-value">${doctor.avg_treatment_days} days</div>
+                    </div>
+                `).join('');
+                document.getElementById('efficient-doctors').innerHTML = efficientDoctorsHtml;
+            } catch (error) {
+                console.error('Error loading doctor performance:', error);
+            }
+        }
+        
+        // Load treatment analytics
+        async function loadTreatmentAnalytics() {
+            try {
+                const response = await fetch('backend/admin.php?action=treatment_analytics');
+                const data = await response.json();
+                
+                // Efficiency metrics
+                const metrics = data.efficiency_metrics;
+                const metricsHtml = `
+                    <div class="metric-item">
+                        <div class="metric-value">${metrics.total_patients}</div>
+                        <div class="metric-label">Total Patients</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${metrics.total_doctors}</div>
+                        <div class="metric-label">Total Doctors</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${metrics.total_departments}</div>
+                        <div class="metric-label">Departments</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${metrics.avg_treatment_duration || 'N/A'}</div>
+                        <div class="metric-label">Avg Treatment Days</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${metrics.avg_patients_per_doctor || 'N/A'}</div>
+                        <div class="metric-label">Patients/Doctor</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${metrics.avg_images_per_patient || 'N/A'}</div>
+                        <div class="metric-label">Images/Patient</div>
+                    </div>
+                `;
+                document.getElementById('efficiency-metrics').innerHTML = metricsHtml;
+                
+                // Monthly trends chart
+                const months = data.monthly_trends.map(trend => trend.month).reverse();
+                const imagesUploaded = data.monthly_trends.map(trend => trend.images_uploaded).reverse();
+                const patientsTreated = data.monthly_trends.map(trend => trend.patients_treated).reverse();
+                const doctorsActive = data.monthly_trends.map(trend => trend.doctors_active).reverse();
+                
+                if (monthlyTrendsChart) monthlyTrendsChart.destroy();
+                const ctx1 = document.getElementById('monthlyTrendsChart').getContext('2d');
+                monthlyTrendsChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'Images Uploaded',
+                                data: imagesUploaded,
+                                backgroundColor: 'rgba(0, 123, 255, 0.6)'
+                            },
+                            {
+                                label: 'Patients Treated',
+                                data: patientsTreated,
+                                backgroundColor: 'rgba(40, 167, 69, 0.6)'
+                            },
+                            {
+                                label: 'Doctors Active',
+                                data: doctorsActive,
+                                backgroundColor: 'rgba(255, 193, 7, 0.6)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { x: { stacked: true }, y: { beginAtZero: true } }
+                    }
+                });
+                
+                // Gender demographics pie chart
+                if (genderPieChart) genderPieChart.destroy();
+                const ctx2 = document.getElementById('genderPieChart').getContext('2d');
+                genderPieChart = new Chart(ctx2, {
+                    type: 'pie',
+                    data: {
+                        labels: data.gender_demographics.map(g => g.gender),
+                        datasets: [{
+                            data: data.gender_demographics.map(g => g.patient_count),
+                            backgroundColor: [
+                                'rgba(0, 123, 255, 0.7)',
+                                'rgba(232, 62, 140, 0.7)',
+                                'rgba(108, 117, 125, 0.7)'
+                            ]
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                });
+                
+                // Status breakdown
+                const statusHtml = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Patient Count</th>
+                                <th>Doctor Count</th>
+                                <th>Average Age</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.status_breakdown.map(status => `
+                                <tr>
+                                    <td>${status.status}</td>
+                                    <td>${status.patient_count}</td>
+                                    <td>${status.doctor_count}</td>
+                                    <td>${status.avg_age || 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById('status-breakdown').innerHTML = statusHtml;
+                
+                // Department performance bar chart
+                if (deptPerfChart) deptPerfChart.destroy();
+                const ctx3 = document.getElementById('deptPerfChart').getContext('2d');
+                deptPerfChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: data.department_performance.map(d => d.department_name),
+                        datasets: [
+                            {
+                                label: 'Patients Treated',
+                                data: data.department_performance.map(d => d.patients_treated),
+                                backgroundColor: 'rgba(0, 123, 255, 0.6)'
+                            },
+                            {
+                                label: 'Doctors',
+                                data: data.department_performance.map(d => d.doctors_count),
+                                backgroundColor: 'rgba(255, 193, 7, 0.6)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { x: { stacked: false }, y: { beginAtZero: true } }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading treatment analytics:', error);
+            }
+        }
+        
+        // Load department analytics
+        async function loadDepartmentAnalytics() {
+            try {
+                const response = await fetch('backend/admin.php?action=department_analytics');
+                const data = await response.json();
+                
+                // Populate department selector
+                const select = document.getElementById('department-select');
+                select.innerHTML = '<option value="">All Departments</option>';
+                data.forEach(dept => {
+                    select.innerHTML += `<option value="${dept.department_id}">${dept.department_name}</option>`;
+                });
+                
+                // Department overview bar chart
+                if (deptOverviewChart) deptOverviewChart.destroy();
+                const ctx4 = document.getElementById('deptOverviewChart').getContext('2d');
+                deptOverviewChart = new Chart(ctx4, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d.department_name),
+                        datasets: [
+                            {
+                                label: 'Total Patients',
+                                data: data.map(d => d.total_patients),
+                                backgroundColor: 'rgba(0, 123, 255, 0.6)'
+                            },
+                            {
+                                label: 'Doctors',
+                                data: data.map(d => d.total_doctors),
+                                backgroundColor: 'rgba(255, 193, 7, 0.6)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { x: { stacked: false }, y: { beginAtZero: true } }
+                    }
+                });
+                
+                // Clear details initially
+                document.getElementById('department-details').innerHTML = '<p>Select a department to view detailed analytics.</p>';
+            } catch (error) {
+                console.error('Error loading department analytics:', error);
+            }
+        }
+        
+        // Load department details
+        async function loadDepartmentDetails() {
+            const departmentId = document.getElementById('department-select').value;
+            if (!departmentId) {
+                document.getElementById('department-details').innerHTML = '<p>Select a department to view detailed analytics.</p>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`backend/admin.php?action=department_analytics&department_id=${departmentId}`);
+                const data = await response.json();
+                
+                const detailsHtml = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h4>Gender Distribution</h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Gender</th>
+                                        <th>Patient Count</th>
+                                        <th>Average Age</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.additional_data.gender_distribution.map(gender => `
+                                        <tr>
+                                            <td>${gender.gender}</td>
+                                            <td>${gender.patient_count}</td>
+                                            <td>${gender.avg_age || 'N/A'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h4>Subcategory Breakdown</h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Subcategory</th>
+                                        <th>Images</th>
+                                        <th>Patients</th>
+                                        <th>Doctors</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.additional_data.subcategory_breakdown.map(sub => `
+                                        <tr>
+                                            <td>${sub.subcategory_name}</td>
+                                            <td>${sub.image_count}</td>
+                                            <td>${sub.patient_count}</td>
+                                            <td>${sub.doctor_count}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>Monthly Trends</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Images Uploaded</th>
+                                    <th>Patients Treated</th>
+                                    <th>Doctors Active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.additional_data.monthly_trends.map(trend => `
+                                    <tr>
+                                        <td>${trend.month}</td>
+                                        <td>${trend.images_uploaded}</td>
+                                        <td>${trend.patients_treated}</td>
+                                        <td>${trend.doctors_active}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                document.getElementById('department-details').innerHTML = detailsHtml;
+            } catch (error) {
+                console.error('Error loading department details:', error);
+            }
+        }
+        
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOverview();
+        });
+    </script>
+</body>
+</html> 

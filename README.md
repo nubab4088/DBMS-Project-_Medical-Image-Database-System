@@ -126,7 +126,7 @@ Compared to existing systems like Practo, OpenMRS, and Cerner:
 * **Frontend:** React (Component-based architecture)
 * **State Management:** React state & local storage
 * **Rendering:** HTML5 Canvas
-* **Storage:** Local Storage
+* **Database:** MySQL
 
 ---
 
@@ -193,16 +193,6 @@ SELECT COUNT(*) FROM Images;
 ## 🎥 Demo Video
 
 🔗 [Medica DB Demo Video](https://drive.google.com/drive/folders/1d2lel_rqnAuB9FNNyUlhttNUZRdqfKXu)
-
----
-
-## ⚠️ Limitations
-
-* No backend encryption (yet)
-* Local storage (not scalable)
-* No forum moderation
-* No notification system
-* Limited user roles
 
 ---
 
